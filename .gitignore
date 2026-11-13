@@ -1,10 +1,4 @@
-# =================
-# Node.js Dependencies
-# =================
-node_modules/
-jspm_packages/
-.pnp/
-.pnp.js
+
 
 # =================
 # Production Builds & Output
@@ -16,20 +10,6 @@ out/
 .nuxt/
 .output/
 .svelte-kit/
-
-# =================
-# Environment & Secrets (Production Safety)
-# =================
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.pem
-*.key
-*.cert
-credentials.json
-secrets.json
 
 # =================
 # Logs, Runtime & Debugging
