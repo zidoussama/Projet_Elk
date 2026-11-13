@@ -1,0 +1,73 @@
+# =================
+# Node.js Dependencies
+# =================
+node_modules/
+jspm_packages/
+.pnp/
+.pnp.js
+
+# =================
+# Production Builds & Output
+# =================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.svelte-kit/
+
+# =================
+# Environment & Secrets (Production Safety)
+# =================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+credentials.json
+secrets.json
+
+# =================
+# Logs, Runtime & Debugging
+# =================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# =================
+# Testing & Coverage
+# =================
+coverage/
+.nyc_output/
+.jest-cache/
+
+# =================
+# Caches & Temporary Files
+# =================
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.turbo/
+
+# =================
+# OS & Editor Specific Files
+# =================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
