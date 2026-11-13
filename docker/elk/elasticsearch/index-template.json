@@ -1,0 +1,99 @@
+{
+  "index_templates": [
+    {
+      "name": "logs-ecom-template",
+      "index_template": {
+        "index_patterns": [
+          "logs-ecom-*"
+        ],
+        "template": {
+          "settings": {
+            "index": {
+              "number_of_shards": "1",
+              "number_of_replicas": "0"
+            }
+          },
+          "mappings": {
+            "properties": {
+              "country": {
+                "type": "keyword"
+              },
+              "source_format": {
+                "type": "keyword"
+              },
+              "amount": {
+                "scaling_factor": 100,
+                "type": "scaled_float"
+              },
+              "upload_id": {
+                "type": "keyword"
+              },
+              "quantity": {
+                "type": "integer"
+              },
+              "level": {
+                "type": "keyword"
+              },
+              "ip": {
+                "type": "ip"
+              },
+              "session_id": {
+                "type": "keyword"
+              },
+              "message": {
+                "type": "text",
+                "fields": {
+                  "raw": {
+                    "ignore_above": 512,
+                    "type": "keyword"
+                  }
+                }
+              },
+              "source_file": {
+                "type": "keyword"
+              },
+              "tags": {
+                "type": "keyword"
+              },
+              "environment": {
+                "type": "keyword"
+              },
+              "@timestamp": {
+                "type": "date"
+              },
+              "event_id": {
+                "type": "keyword"
+              },
+              "event_type": {
+                "type": "keyword"
+              },
+              "user_id": {
+                "type": "keyword"
+              },
+              "service": {
+                "type": "keyword"
+              },
+              "product_id": {
+                "type": "keyword"
+              },
+              "currency": {
+                "type": "keyword"
+              },
+              "location": {
+                "type": "geo_point"
+              },
+              "order_id": {
+                "type": "keyword"
+              },
+              "status": {
+                "type": "keyword"
+              }
+            }
+          }
+        },
+        "composed_of": [],
+        "priority": 200
+      }
+    }
+  ]
+}
