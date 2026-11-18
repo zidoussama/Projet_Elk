@@ -17,8 +17,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@better-auth/mongo-adapter": "^1.7.25",
     "@elastic/elasticsearch": "^9.5.1",
     "bcrypt": "^6.0.0",
+    "better-auth": "^1.7.25",
     "bullmq": "^6.7.6",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -27,6 +29,7 @@
     "express": "^5.3.0",
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.9.0",
     "mongoose": "^9.12.2",
     "redis": "^6.3.1",
     "socket.io": "^4.8.4"
