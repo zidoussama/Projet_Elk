@@ -17,10 +17,19 @@ const fileSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ['indexed', 'ingesting', 'validated', 'failed'], 
-
     },
     logcontent: {
         type: String,
+    },
+    indexedCount: {
+        type: Number,
+        default: 0
+    },
+    indexedAt: {
+        type: Date
+    },
+    indexingError: {
+        type: String
     },
     uploadDate: { type: Date, default: Date.now }
 });

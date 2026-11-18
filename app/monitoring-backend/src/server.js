@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 const { connectMongoDB } = require("./config/mongodb");
 const { connectRedis, redisClient } = require("./config/redis");
 const elasticClient = require("./config/elasticsearch");
+const fileRoutes = require("./routes/fileRoutes");
 
 const app = express();
 
@@ -73,6 +74,8 @@ async function startServer() {
                 message: "Server works"
             });
         });
+
+        app.use("/api/logs", fileRoutes);
 
         // ==========================
         // Health Check

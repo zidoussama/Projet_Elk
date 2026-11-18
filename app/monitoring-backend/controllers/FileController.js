@@ -1,5 +1,6 @@
 const path = require("node:path");
 const { File } = require("../Models/FilesModels");
+const { processUploadedFile } = require("../src/services/fileIngestion");
 
 const SUPPORTED_TYPES = new Set(["csv", "json", "txt"]);
 const DEFAULT_MAX_FILE_SIZE_MB = 100;
@@ -123,16 +124,21 @@ exports.uploadFile = async (req, res) => {
             status: "validated"
         });
         await newFile.save();
+        const ingestedFile = await processUploadedFile(newFile._id);
 
         res.status(201).json({
-            message: "File uploaded and validated successfully",
+            message: ingestedFile.status === "indexed"
+                ? "File uploaded and indexed successfully"
+                : "File uploaded but indexing failed",
             file: {
-                id: newFile._id,
-                filename: newFile.filename,
-                type: newFile.type,
-                size: newFile.size,
-                status: newFile.status,
-                uploadDate: newFile.uploadDate
+                id: ingestedFile._id,
+                filename: ingestedFile.filename,
+                type: ingestedFile.type,
+                size: ingestedFile.size,
+                status: ingestedFile.status,
+                indexedCount: ingestedFile.indexedCount,
+                indexingError: ingestedFile.indexingError,
+                uploadDate: ingestedFile.uploadDate
             }
         });
     } catch (error) {
