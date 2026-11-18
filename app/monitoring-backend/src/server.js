@@ -41,8 +41,9 @@ async function startServer() {
 
         // 2. Initialize Better Auth using existing Mongoose connection
         const { toNodeHandler } = await import("better-auth/node");
-        const { createAuth } = await import("../Auth/auth.js");
+        const { createAuth, ensureUserRoles } = await import("../Auth/auth.js");
         const auth = createAuth(mongoose.connection.db);
+        await ensureUserRoles(mongoose.connection.db);
 
         // 3. Mount Better Auth BEFORE express.json()
         app.all(
