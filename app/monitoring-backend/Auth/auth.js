@@ -1,6 +1,30 @@
 
 const { betterAuth } = require("better-auth");
 const { mongodbAdapter } = require("@better-auth/mongo-adapter");
+const { admin } = require("better-auth/plugins");
+
+function getAdminUserIds() {
+    return (process.env.ADMIN_USER_IDS || "")
+        .split(",")
+        .map(userId => userId.trim())
+        .filter(Boolean);
+}
+
+async function ensureUserRoles(mongoDatabase) {
+    const result = await mongoDatabase.collection("user").updateMany(
+        {
+            $or: [
+                { role: { $exists: false } },
+                { role: null }
+            ]
+        },
+        { $set: { role: "user" } }
+    );
+
+    if (result.modifiedCount > 0) {
+        console.log(`Assigned default user role to ${result.modifiedCount} existing user(s)`);
+    }
+}
 
 function createAuth(mongoDatabase) {
 
@@ -49,9 +73,17 @@ function createAuth(mongoDatabase) {
             enabled: true,
             requireEmailVerification: false,
             minPasswordLength: 8
-        }
+        },
+
+        plugins: [
+            admin({
+                defaultRole: "user",
+                adminRoles: ["admin"],
+                adminUserIds: getAdminUserIds()
+            })
+        ]
 
     });
 }
 
-module.exports = { createAuth };
+module.exports = { createAuth, ensureUserRoles };
