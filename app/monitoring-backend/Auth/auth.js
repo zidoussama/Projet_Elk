@@ -1,7 +1,7 @@
 
 const { betterAuth } = require("better-auth");
 const { mongodbAdapter } = require("@better-auth/mongo-adapter");
-const { admin } = require("better-auth/plugins");
+const { admin, twoFactor } = require("better-auth/plugins");
 
 function getAdminUserIds() {
     return (process.env.ADMIN_USER_IDS || "")
@@ -80,6 +80,9 @@ function createAuth(mongoDatabase) {
                 defaultRole: "user",
                 adminRoles: ["admin"],
                 adminUserIds: getAdminUserIds()
+            }),
+            twoFactor({
+                issuer: "Monitoring Backend"
             })
         ]
 
