@@ -57,6 +57,31 @@
             "type": "number",
             "example": 2
           },
+          "logCount": {
+            "type": "number",
+            "example": 2
+          },
+          "uploadId": {
+            "type": "string",
+            "example": "u_64f000000000000000000001"
+          },
+          "sourceFormat": {
+            "type": "string",
+            "enum": [
+              "csv",
+              "json",
+              "txt"
+            ],
+            "example": "csv"
+          },
+          "ingestionType": {
+            "type": "string",
+            "enum": [
+              "api",
+              "logstash"
+            ],
+            "example": "api"
+          },
           "indexingError": {
             "type": "string",
             "nullable": true,
@@ -75,6 +100,10 @@
           "size",
           "status",
           "indexedCount",
+          "logCount",
+          "uploadId",
+          "sourceFormat",
+          "ingestionType",
           "indexingError",
           "uploadDate"
         ]
@@ -270,6 +299,63 @@
                               "isFinite": true,
                               "format": null
                             },
+                            "logCount": {
+                              "def": {
+                                "type": "number",
+                                "checks": []
+                              },
+                              "type": "number",
+                              "isFinite": true,
+                              "format": null
+                            },
+                            "uploadId": {
+                              "def": {
+                                "type": "string"
+                              },
+                              "type": "string",
+                              "minLength": null,
+                              "maxLength": null,
+                              "format": null
+                            },
+                            "sourceFormat": {
+                              "def": {
+                                "type": "enum",
+                                "entries": {
+                                  "csv": "csv",
+                                  "json": "json",
+                                  "txt": "txt"
+                                }
+                              },
+                              "type": "enum",
+                              "enum": {
+                                "csv": "csv",
+                                "json": "json",
+                                "txt": "txt"
+                              },
+                              "options": [
+                                "csv",
+                                "json",
+                                "txt"
+                              ]
+                            },
+                            "ingestionType": {
+                              "def": {
+                                "type": "enum",
+                                "entries": {
+                                  "api": "api",
+                                  "logstash": "logstash"
+                                }
+                              },
+                              "type": "enum",
+                              "enum": {
+                                "api": "api",
+                                "logstash": "logstash"
+                              },
+                              "options": [
+                                "api",
+                                "logstash"
+                              ]
+                            },
                             "indexingError": {
                               "def": {
                                 "type": "nullable",
@@ -314,6 +400,47 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logs/{id}/status": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "Get current upload status and Elasticsearch log count",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "64f000000000000000000001"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current file status and indexed log count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/File"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -488,6 +615,63 @@
                             "type": "number",
                             "isFinite": true,
                             "format": null
+                          },
+                          "logCount": {
+                            "def": {
+                              "type": "number",
+                              "checks": []
+                            },
+                            "type": "number",
+                            "isFinite": true,
+                            "format": null
+                          },
+                          "uploadId": {
+                            "def": {
+                              "type": "string"
+                            },
+                            "type": "string",
+                            "minLength": null,
+                            "maxLength": null,
+                            "format": null
+                          },
+                          "sourceFormat": {
+                            "def": {
+                              "type": "enum",
+                              "entries": {
+                                "csv": "csv",
+                                "json": "json",
+                                "txt": "txt"
+                              }
+                            },
+                            "type": "enum",
+                            "enum": {
+                              "csv": "csv",
+                              "json": "json",
+                              "txt": "txt"
+                            },
+                            "options": [
+                              "csv",
+                              "json",
+                              "txt"
+                            ]
+                          },
+                          "ingestionType": {
+                            "def": {
+                              "type": "enum",
+                              "entries": {
+                                "api": "api",
+                                "logstash": "logstash"
+                              }
+                            },
+                            "type": "enum",
+                            "enum": {
+                              "api": "api",
+                              "logstash": "logstash"
+                            },
+                            "options": [
+                              "api",
+                              "logstash"
+                            ]
                           },
                           "indexingError": {
                             "def": {
