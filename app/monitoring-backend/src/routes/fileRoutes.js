@@ -6,7 +6,7 @@ const {
     getAllFiles,
     deleteFile,
     getMaxFileSizeBytes
-} = require("../../controllers/FileController");
+} = require("../controllers/FileController");
 const { validateLogFile } = require("../middleware/validateLogFile");
 
 const router = express.Router();

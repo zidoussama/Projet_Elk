@@ -9,6 +9,7 @@ const { connectMongoDB } = require("./config/mongodb");
 const { connectRedis, redisClient } = require("./config/redis");
 const elasticClient = require("./config/elasticsearch");
 const fileRoutes = require("./routes/fileRoutes");
+const { mountSwagger } = require("./config/swagger");
 
 const app = express();
 
@@ -21,9 +22,12 @@ const app = express();
 // ==========================
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     credentials: true
+    
 }));
+
+mountSwagger(app);
 
 // ==========================
 // Server startup
@@ -42,7 +46,7 @@ async function startServer() {
 
         // 2. Initialize Better Auth using existing Mongoose connection
         const { toNodeHandler } = await import("better-auth/node");
-        const { createAuth, ensureUserRoles } = await import("../Auth/auth.js");
+        const { createAuth, ensureUserRoles } = await import("../src/Auth/auth.js");
         const auth = createAuth(mongoose.connection.db);
         await ensureUserRoles(mongoose.connection.db);
 
@@ -56,7 +60,15 @@ async function startServer() {
 
         // 4. Existing Redis connection
         try {
-            await connectRedis();
+            await Promise.race([
+                connectRedis(),
+                new Promise((_, reject) =>
+                    setTimeout(
+                        () => reject(new Error("Redis connection timeout")),
+                        4000
+                    )
+                )
+            ]);
             console.log("Redis connected successfully");
         } catch (error) {
             console.error("Redis connection failed:", error.message);
@@ -68,12 +80,6 @@ async function startServer() {
         // ==========================
         // Existing routes
         // ==========================
-
-        app.get("/test", (req, res) => {
-            res.json({
-                message: "Server works"
-            });
-        });
 
         app.use("/api/logs", fileRoutes);
 
@@ -156,6 +162,8 @@ async function startServer() {
             console.log(`Server running on port ${PORT}`);
             console.log(`Health: http://localhost:${PORT}/health`);
             console.log(`Auth: http://localhost:${PORT}/api/auth`);
+            console.log(`Better Auth API reference: http://localhost:${PORT}/api/auth/reference`);
+            console.log(`Better Auth OpenAPI JSON: http://localhost:${PORT}/api/auth/open-api/generate-schema`);
         });
 
     } catch (error) {

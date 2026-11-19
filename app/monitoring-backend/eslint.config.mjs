@@ -8,7 +8,7 @@ export default [
   },
   eslint.configs.recommended,
   {
-    files: ["**/*.js", "**/*.mjs"],
+    files: ["**/*.js", "**/*.mjs", "**/*.cjs"],
     languageOptions: {
       globals: { ...globals.node, ...globals.vitest },
     },

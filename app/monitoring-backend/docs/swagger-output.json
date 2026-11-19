@@ -1,0 +1,563 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Monitoring Backend API",
+    "version": "1.0.0",
+    "description": "API documentation for the ELK, MongoDB and Redis monitoring backend"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Backend server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Logs",
+      "description": "Log file upload, validation, storage and download"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "File": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "64f000000000000000000001"
+          },
+          "filename": {
+            "type": "string",
+            "example": "logs.txt"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "csv",
+              "json",
+              "txt"
+            ],
+            "example": "txt"
+          },
+          "size": {
+            "type": "number",
+            "example": 84
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "validated",
+              "ingesting",
+              "indexed",
+              "failed"
+            ],
+            "example": "indexed"
+          },
+          "indexedCount": {
+            "type": "number",
+            "example": 2
+          },
+          "indexingError": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-18T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "type",
+          "size",
+          "status",
+          "indexedCount",
+          "indexingError",
+          "uploadDate"
+        ]
+      },
+      "UploadResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "File uploaded and indexed successfully"
+          },
+          "file": {
+            "$ref": "#/components/schemas/File"
+          }
+        },
+        "required": [
+          "message",
+          "file"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "File not found"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/logs/upload": {
+      "post": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "Upload and ingest a log file",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "CSV, JSON, or TXT file"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "File uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unsupported file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logs": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "List uploaded files",
+        "responses": {
+          "200": {
+            "description": "Stored file metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "count",
+                    "files"
+                  ],
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "def": {
+                          "type": "object",
+                          "shape": {
+                            "id": {
+                              "def": {
+                                "type": "string"
+                              },
+                              "type": "string",
+                              "minLength": null,
+                              "maxLength": null,
+                              "format": null
+                            },
+                            "filename": {
+                              "def": {
+                                "type": "string"
+                              },
+                              "type": "string",
+                              "minLength": null,
+                              "maxLength": null,
+                              "format": null
+                            },
+                            "type": {
+                              "def": {
+                                "type": "enum",
+                                "entries": {
+                                  "csv": "csv",
+                                  "json": "json",
+                                  "txt": "txt"
+                                }
+                              },
+                              "type": "enum",
+                              "enum": {
+                                "csv": "csv",
+                                "json": "json",
+                                "txt": "txt"
+                              },
+                              "options": [
+                                "csv",
+                                "json",
+                                "txt"
+                              ]
+                            },
+                            "size": {
+                              "def": {
+                                "type": "number",
+                                "checks": []
+                              },
+                              "type": "number",
+                              "isFinite": true,
+                              "format": null
+                            },
+                            "status": {
+                              "def": {
+                                "type": "enum",
+                                "entries": {
+                                  "validated": "validated",
+                                  "ingesting": "ingesting",
+                                  "indexed": "indexed",
+                                  "failed": "failed"
+                                }
+                              },
+                              "type": "enum",
+                              "enum": {
+                                "validated": "validated",
+                                "ingesting": "ingesting",
+                                "indexed": "indexed",
+                                "failed": "failed"
+                              },
+                              "options": [
+                                "validated",
+                                "ingesting",
+                                "indexed",
+                                "failed"
+                              ]
+                            },
+                            "indexedCount": {
+                              "def": {
+                                "type": "number",
+                                "checks": []
+                              },
+                              "type": "number",
+                              "isFinite": true,
+                              "format": null
+                            },
+                            "indexingError": {
+                              "def": {
+                                "type": "nullable",
+                                "innerType": {
+                                  "def": {
+                                    "type": "string"
+                                  },
+                                  "type": "string",
+                                  "minLength": null,
+                                  "maxLength": null,
+                                  "format": null
+                                }
+                              },
+                              "type": "nullable"
+                            },
+                            "uploadDate": {
+                              "def": {
+                                "type": "string",
+                                "checks": [
+                                  {
+                                    "def": {
+                                      "type": "string",
+                                      "format": "datetime",
+                                      "check": "string_format",
+                                      "offset": false,
+                                      "local": false,
+                                      "precision": null,
+                                      "pattern": {}
+                                    },
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "type": "string",
+                              "minLength": null,
+                              "maxLength": null,
+                              "format": "datetime"
+                            }
+                          }
+                        },
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logs/{id}/download": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "Download a stored file",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "64f000000000000000000001"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Original uploaded file",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logs/{id}": {
+      "delete": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "Delete a stored file",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "64f000000000000000000001"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "File deleted successfully"
+                    },
+                    "file": {
+                      "def": {
+                        "type": "object",
+                        "shape": {
+                          "id": {
+                            "def": {
+                              "type": "string"
+                            },
+                            "type": "string",
+                            "minLength": null,
+                            "maxLength": null,
+                            "format": null
+                          },
+                          "filename": {
+                            "def": {
+                              "type": "string"
+                            },
+                            "type": "string",
+                            "minLength": null,
+                            "maxLength": null,
+                            "format": null
+                          },
+                          "type": {
+                            "def": {
+                              "type": "enum",
+                              "entries": {
+                                "csv": "csv",
+                                "json": "json",
+                                "txt": "txt"
+                              }
+                            },
+                            "type": "enum",
+                            "enum": {
+                              "csv": "csv",
+                              "json": "json",
+                              "txt": "txt"
+                            },
+                            "options": [
+                              "csv",
+                              "json",
+                              "txt"
+                            ]
+                          },
+                          "size": {
+                            "def": {
+                              "type": "number",
+                              "checks": []
+                            },
+                            "type": "number",
+                            "isFinite": true,
+                            "format": null
+                          },
+                          "status": {
+                            "def": {
+                              "type": "enum",
+                              "entries": {
+                                "validated": "validated",
+                                "ingesting": "ingesting",
+                                "indexed": "indexed",
+                                "failed": "failed"
+                              }
+                            },
+                            "type": "enum",
+                            "enum": {
+                              "validated": "validated",
+                              "ingesting": "ingesting",
+                              "indexed": "indexed",
+                              "failed": "failed"
+                            },
+                            "options": [
+                              "validated",
+                              "ingesting",
+                              "indexed",
+                              "failed"
+                            ]
+                          },
+                          "indexedCount": {
+                            "def": {
+                              "type": "number",
+                              "checks": []
+                            },
+                            "type": "number",
+                            "isFinite": true,
+                            "format": null
+                          },
+                          "indexingError": {
+                            "def": {
+                              "type": "nullable",
+                              "innerType": {
+                                "def": {
+                                  "type": "string"
+                                },
+                                "type": "string",
+                                "minLength": null,
+                                "maxLength": null,
+                                "format": null
+                              }
+                            },
+                            "type": "nullable"
+                          },
+                          "uploadDate": {
+                            "def": {
+                              "type": "string",
+                              "checks": [
+                                {
+                                  "def": {
+                                    "type": "string",
+                                    "format": "datetime",
+                                    "check": "string_format",
+                                    "offset": false,
+                                    "local": false,
+                                    "precision": null,
+                                    "pattern": {}
+                                  },
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "type": "string",
+                            "minLength": null,
+                            "maxLength": null,
+                            "format": "datetime"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid MongoDB ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

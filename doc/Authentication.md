@@ -24,6 +24,26 @@ The current configuration provides:
 - Better Auth admin endpoints protected by the authenticated admin role.
 - Existing users without a role normalized to `user` during startup.
 
+## API documentation
+
+Better Auth provides native API documentation for all dynamically mounted auth,
+admin, session, and two-factor routes.
+
+| URL | Purpose |
+|---|---|
+| `http://localhost:3000/api/auth/reference` | Interactive Better Auth API reference |
+| `http://localhost:3000/api/auth/open-api/generate-schema` | Generated Better Auth OpenAPI JSON |
+
+The Express Swagger UI is available separately at:
+
+```text
+http://localhost:3000/api-docs
+```
+
+It documents the backend health and log-file routes. Better Auth routes are
+documented through its native OpenAPI plugin rather than `swagger-autogen`
+because those endpoints are mounted dynamically.
+
 ## Postman setup
 
 Create a Postman environment with:
