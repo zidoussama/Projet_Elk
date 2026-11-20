@@ -2,3 +2,5 @@
   path.config: "/usr/share/logstash/pipeline/csv.conf"
 - pipeline.id: json-logs
   path.config: "/usr/share/logstash/pipeline/json.conf"
+- pipeline.id: txt-logs
+  path.config: "/usr/share/logstash/pipeline/txt.conf"
