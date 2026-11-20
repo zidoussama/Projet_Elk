@@ -45,3 +45,11 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+node_modules/
+dist/
+
+.env
+.env.*
+
+
+/temporeport
