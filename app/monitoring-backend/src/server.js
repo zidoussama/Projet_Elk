@@ -9,6 +9,9 @@ const { connectMongoDB } = require("./config/mongodb");
 const { connectRedis, redisClient } = require("./config/redis");
 const elasticClient = require("./config/elasticsearch");
 const fileRoutes = require("./routes/fileRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
+const searchRoutes = require("./routes/searchRoutes");
+const statusRoutes = require("./routes/statusRoutes");
 const { mountSwagger } = require("./config/swagger");
 
 const app = express();
@@ -82,6 +85,9 @@ async function startServer() {
         // ==========================
 
         app.use("/api/logs", fileRoutes);
+        app.use("/api/logs", uploadRoutes);
+        app.use("/api/logs", searchRoutes);
+        app.use("/api/logs", statusRoutes);
 
         // ==========================
         // Health Check

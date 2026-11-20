@@ -162,6 +162,78 @@ registry.registerPath({
 
 registry.registerPath({
     method: "get",
+    path: "/api/logs/search",
+    tags: ["Logs"],
+    summary: "Search logs with text, level, service, date range, sorting and pagination",
+    request: {
+        query: z.object({
+            text: z.string().optional(),
+            level: z.string().optional(),
+            service: z.string().optional(),
+            from: z.string().datetime().optional(),
+            to: z.string().datetime().optional(),
+            page: z.coerce.number().int().positive().optional(),
+            sort: z.enum(["asc", "desc"]).optional()
+        })
+    },
+    responses: {
+        200: {
+            description: "Paginated matching logs",
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        required: ["page", "size", "total", "results"],
+                        properties: {
+                            page: { type: "integer", example: 1 },
+                            size: { type: "integer", example: 50 },
+                            total: { type: "integer", example: 120 },
+                            results: { type: "array", items: { type: "object" } }
+                        }
+                    }
+                }
+            }
+        },
+        500: {
+            description: "Search failed",
+            content: {
+                "application/json": {
+                    schema: errorResponse
+                }
+            }
+        }
+    }
+});
+
+registry.registerPath({
+    method: "get",
+    path: "/api/logs/search/export",
+    tags: ["Logs"],
+    summary: "Export matching logs as CSV",
+    request: {
+        query: z.object({
+            text: z.string().optional(),
+            level: z.string().optional(),
+            service: z.string().optional(),
+            from: z.string().datetime().optional(),
+            to: z.string().datetime().optional(),
+            sort: z.enum(["asc", "desc"]).optional()
+        })
+    },
+    responses: {
+        200: {
+            description: "CSV file",
+            content: {
+                "text/csv": {
+                    schema: { type: "string", format: "binary" }
+                }
+            }
+        }
+    }
+});
+
+registry.registerPath({
+    method: "get",
     path: "/api/logs",
     tags: ["Logs"],
     summary: "List uploaded files",

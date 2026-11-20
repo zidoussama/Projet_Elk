@@ -1,4 +1,4 @@
-const { buildFilePreview } = require("./FileController");
+const { buildFilePreview } = require("./FilePreviewController");
 
 describe("file preview", () => {
     it("returns at most 10 preview lines and validation success", () => {
