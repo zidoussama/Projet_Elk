@@ -234,6 +234,71 @@ registry.registerPath({
 
 registry.registerPath({
     method: "get",
+    path: "/api/dashboard/stats",
+    tags: ["Dashboard"],
+    summary: "Get dashboard log and file statistics",
+    responses: {
+        200: {
+            description: "Aggregated dashboard statistics",
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        required: [
+                            "totalLogs",
+                            "logsToday",
+                            "errorLogs",
+                            "criticalLogs",
+                            "errorCriticalLogs",
+                            "importedFiles",
+                            "hourlyEvolution",
+                            "levelDistribution"
+                        ],
+                        properties: {
+                            totalLogs: { type: "integer" },
+                            logsToday: { type: "integer" },
+                            errorLogs: { type: "integer" },
+                            criticalLogs: { type: "integer" },
+                            errorCriticalLogs: { type: "integer" },
+                            importedFiles: { type: "integer" },
+                            hourlyEvolution: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        hour: { type: "string", format: "date-time" },
+                                        count: { type: "integer" }
+                                    }
+                                }
+                            },
+                            levelDistribution: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        level: { type: "string" },
+                                        count: { type: "integer" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        500: {
+            description: "Dashboard aggregation failed",
+            content: {
+                "application/json": {
+                    schema: errorResponse
+                }
+            }
+        }
+    }
+});
+
+registry.registerPath({
+    method: "get",
     path: "/api/logs",
     tags: ["Logs"],
     summary: "List uploaded files",
