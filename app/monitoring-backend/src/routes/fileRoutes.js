@@ -3,6 +3,7 @@ const multer = require("multer");
 const mongoose = require("mongoose");
 const {
     uploadFile,
+    previewFile,
     getFile,
     getAllFiles,
     deleteFile,
@@ -18,6 +19,7 @@ const upload = multer({
     }
 });
 
+router.post("/preview", upload.single("file"), validateLogFile, previewFile);
 router.post("/upload", upload.single("file"), validateLogFile, uploadFile);
 router.get("/", getAllFiles);
 router.get("/stream", (req, res) => {
