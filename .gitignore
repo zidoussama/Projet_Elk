@@ -45,20 +45,3 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
-
-# Backend JavaScript source and configuration
-!app/
-!app/monitoring-backend/
-!app/monitoring-backend/src/
-!app/monitoring-backend/src/server.js
-!app/monitoring-backend/src/config/
-!app/monitoring-backend/src/config/database.js
-!app/monitoring-backend/src/routes/
-!app/monitoring-backend/src/routes/monitoring.routes.js
-!app/monitoring-backend/src/utils/
-!app/monitoring-backend/src/utils/math.js
-!app/monitoring-backend/src/utils/math.test.js
-!app/monitoring-backend/vitest.config.js
-!app/monitoring-backend/eslint.config.mjs
-!doc/
-!doc/ApplicationDocumentation.md
