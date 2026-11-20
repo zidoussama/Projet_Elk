@@ -100,14 +100,6 @@ function buildDocuments(file) {
         }));
 }
 
-function getIndexName() {
-    const date = new Date();
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-    return `logs-ecom-${year}.${month}.${day}`;
-}
-
 async function processUploadedFile(fileId) {
     const file = await File.findById(fileId);
     if (!file) {
