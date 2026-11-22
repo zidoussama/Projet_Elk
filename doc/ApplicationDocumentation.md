@@ -14,20 +14,18 @@ Elastic Stack. The completed work currently has two distinct layers:
 
 1. **An operational ELK pipeline** that generates, parses, normalizes, and indexes
    e-commerce log events from CSV and JSON Lines files.
-2. **A JavaScript monitoring-backend scaffold** prepared for future application
-   development, with dependencies selected for HTTP APIs, authentication, persistence,
-   queues, real-time events, and Elasticsearch integration.
+2. **A JavaScript monitoring backend** with routes for health checks, dashboard
+   statistics, log-file management, log search, CSV export, and Better Auth.
 
 The ELK layer is the most complete part of the project and has been validated with a
-CSV dataset containing 250 valid events. The backend is intentionally documented as a
-scaffold: its package configuration, environment contract, linting configuration, and
-unit-test foundation, HTTP entrypoint, and health route exist, but no database model,
-business route, or frontend has yet been implemented.
+CSV dataset containing 250 valid events. The backend has a working HTTP entrypoint,
+MongoDB file model, Elasticsearch-backed search/statistics services, and route layer.
+No frontend has yet been implemented.
 
 This distinction is important for onboarding and deployment. The repository can be used
 today to run the local log-ingestion demonstration and start the backend health service.
-It cannot yet be used as a complete monitoring API without implementing its application
-modules and business routes.
+It should still be treated as a local-development monitoring API until authentication
+middleware, production security, and broader integration testing are added.
 
 ## 2. Current implementation status
 
@@ -43,6 +41,8 @@ modules and business routes.
 | Redis local service | Available as a separate service | `docker/redis/docker-compose.yml` |
 | Backend dependency and script setup | Implemented | `app/monitoring-backend/package.json` |
 | Backend utility example and tests | Implemented | `app/monitoring-backend/src/utils/` |
+| Backend route layer | Implemented | `app/monitoring-backend/src/routes/` |
+| Route-by-route API documentation | Implemented | `doc/RouteDocumentation.md` |
 | Backend HTTP entrypoint and health endpoint | Implemented | `app/monitoring-backend/src/server.js` |
 | Frontend | Not present | No frontend module exists under `app/` |
 
@@ -120,7 +120,7 @@ The two Logstash pipelines intentionally produce a common event schema. This all
 events to be queried and aggregated consistently regardless of whether the source was
 CSV or JSON Lines.
 
-### 4.2 Planned application path
+### 4.2 Application path
 
 The backend manifest indicates the intended application direction:
 
@@ -140,9 +140,10 @@ MongoDB Redis  BullMQ  Elasticsearch
      Socket.IO real-time updates
 ```
 
-This is a target architecture inferred from the declared dependencies, not an
-implemented runtime architecture. The repository currently contains no route layer,
-service layer, model layer, worker, Socket.IO server, or authentication flow.
+The Express route layer, MongoDB file model, Elasticsearch search/statistics
+services, and Logstash handoff are implemented. Redis, BullMQ, and Socket.IO remain
+available dependencies for future background and real-time features; they are not
+used by every route.
 
 ## 5. ELK implementation
 
@@ -397,7 +398,8 @@ configuration for completed behavior:
 3. Implement Redis/BullMQ workers and retry/dead-letter policies.
 4. Implement JWT authentication, password handling, and authorization rules.
 5. Add Socket.IO event contracts and connection authorization.
-6. Add API documentation, request schemas, and integration tests.
+6. Expand request schemas and integration tests as new API behavior is introduced;
+   the current routes are documented independently in `doc/RouteDocumentation.md`.
 7. Add a frontend or dashboard client if a user-facing monitoring interface is required.
 8. Add CI validation for linting, tests, type-checking, and container configuration.
 9. Move production security, retention, and observability settings into deployment
@@ -446,3 +448,15 @@ configuration for completed behavior:
 - [JSON Lines pipeline](../docker/elk/logstash/pipeline/json.conf)
 - [Mock-log generator](../docker/elk/scripts/generate_mock_logs.py)
 - [Pipeline realization report](./PiplineDoc.md)
+- [Route documentation index](./RouteDocumentation.md)
+- [Health route](./HealthRoute.md)
+- [Dashboard statistics route](./DashboardStatsRoute.md)
+- [Log preview route](./LogPreviewRoute.md)
+- [Log upload route](./LogUploadRoute.md)
+- [Log files route](./LogFilesRoute.md)
+- [Log file status route](./LogFileStatusRoute.md)
+- [Log file stream route](./LogFileStreamRoute.md)
+- [Log file download route](./LogFileDownloadRoute.md)
+- [Log file deletion route](./LogFileDeleteRoute.md)
+- [Log search route](./LogSearchRoute.md)
+- [Log export route](./LogExportRoute.md)

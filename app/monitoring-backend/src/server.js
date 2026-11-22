@@ -12,6 +12,7 @@ const fileRoutes = require("./routes/fileRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const searchRoutes = require("./routes/searchRoutes");
 const statusRoutes = require("./routes/statusRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const { mountSwagger } = require("./config/swagger");
 
 const app = express();
@@ -88,6 +89,7 @@ async function startServer() {
         app.use("/api/logs", uploadRoutes);
         app.use("/api/logs", searchRoutes);
         app.use("/api/logs", statusRoutes);
+        app.use("/api/dashboard", dashboardRoutes);
 
         // ==========================
         // Health Check
