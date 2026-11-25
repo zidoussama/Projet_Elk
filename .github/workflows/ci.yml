@@ -55,7 +55,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: app/monitoring-frontend
+        working-directory: app/Monitoring-frontend
 
     steps:
       - name: Checkout
