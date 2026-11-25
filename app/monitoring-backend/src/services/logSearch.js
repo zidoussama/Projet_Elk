@@ -1,4 +1,8 @@
 const elasticClient = require("../config/elasticsearch");
+const {
+    getLogLevelVariants,
+    normalizeLogRecord
+} = require("../utils/logLevel");
 
 const PAGE_SIZE = 50;
 const INDEX_PATTERN = "logs-ecom-*";
@@ -12,7 +16,14 @@ function buildSearchQuery(params = {}) {
     const to = String(params.to || params.end || "").trim();
 
     if (level) {
-        filters.push({ term: { level: level.toUpperCase() } });
+        filters.push({
+            bool: {
+                should: getLogLevelVariants(level).map(variant => ({
+                    term: { level: { value: variant, case_insensitive: true } }
+                })),
+                minimum_should_match: 1
+            }
+        });
     }
     if (service) {
         filters.push({ term: { service } });
@@ -74,7 +85,7 @@ async function searchLogs(params = {}) {
             id: hit._id,
             index: hit._index,
             score: hit._score,
-            ...hit._source
+            ...normalizeLogRecord(hit._source || {})
         }))
     };
 }
@@ -87,7 +98,9 @@ async function getAllCsvLogs(params = {}) {
         sort: buildSort(params.sort)
     });
 
-    return (response.hits?.hits || []).map(hit => hit._source || {});
+    return (response.hits?.hits || []).map(hit =>
+        normalizeLogRecord(hit._source || {})
+    );
 }
 
 function escapeCsvValue(value) {
@@ -101,9 +114,10 @@ function escapeCsvValue(value) {
 function logsToCsv(logs) {
     if (!Array.isArray(logs) || logs.length === 0) return "";
 
-    const columns = [...new Set(logs.flatMap(log => Object.keys(log)))];
+    const normalizedLogs = logs.map(log => normalizeLogRecord(log));
+    const columns = [...new Set(normalizedLogs.flatMap(log => Object.keys(log)))];
     const header = columns.map(escapeCsvValue).join(",");
-    const rows = logs.map(log =>
+    const rows = normalizedLogs.map(log =>
         columns.map(column => escapeCsvValue(log[column])).join(",")
     );
     return [header, ...rows].join("\n");

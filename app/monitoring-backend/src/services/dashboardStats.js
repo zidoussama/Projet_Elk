@@ -1,5 +1,9 @@
 const elasticClient = require("../config/elasticsearch");
 const { File } = require("../Models/FilesModels");
+const {
+    getLogLevelVariants,
+    normalizeLogLevel
+} = require("../utils/logLevel");
 
 const INDEX_PATTERN = "logs-ecom-*";
 
@@ -11,6 +15,34 @@ function formatUtcHour(timestamp) {
 
 function normalizeErrorCount(response) {
     return typeof response?.count === "number" ? response.count : 0;
+}
+
+function buildLevelCountQuery(levels) {
+    const variants = [...new Set(
+        levels.flatMap(level => getLogLevelVariants(level))
+    )];
+
+    return {
+        bool: {
+            should: variants.map(variant => ({
+                term: { level: { value: variant, case_insensitive: true } }
+            })),
+            minimum_should_match: 1
+        }
+    };
+}
+
+function normalizeLevelBuckets(buckets = []) {
+    const counts = new Map();
+
+    for (const bucket of buckets) {
+        const level = normalizeLogLevel(bucket.key);
+        if (!level) continue;
+        counts.set(level, (counts.get(level) || 0) + bucket.doc_count);
+    }
+
+    return Array.from(counts, ([level, count]) => ({ level, count }))
+        .sort((left, right) => right.count - left.count);
 }
 
 async function getDashboardStats(now = new Date()) {
@@ -43,11 +75,11 @@ async function getDashboardStats(now = new Date()) {
             }),
             elasticClient.count({
                 index: INDEX_PATTERN,
-                query: { term: { level: "ERROR" } }
+                query: buildLevelCountQuery(["ERROR", "ERR"])
             }),
             elasticClient.count({
                 index: INDEX_PATTERN,
-                query: { term: { level: "CRITICAL" } }
+                query: buildLevelCountQuery(["CRITICAL", "FATAL"])
             }),
             elasticClient.search({
                 index: INDEX_PATTERN,
@@ -98,14 +130,13 @@ async function getDashboardStats(now = new Date()) {
             hour: formatUtcHour(bucket.key_as_string || bucket.key),
             count: bucket.doc_count
         })),
-        levelDistribution: levelBuckets.map(bucket => ({
-            level: bucket.key,
-            count: bucket.doc_count
-        }))
+        levelDistribution: normalizeLevelBuckets(levelBuckets)
     };
 }
 
 module.exports = {
+    buildLevelCountQuery,
     formatUtcHour,
-    getDashboardStats
+    getDashboardStats,
+    normalizeLevelBuckets
 };
