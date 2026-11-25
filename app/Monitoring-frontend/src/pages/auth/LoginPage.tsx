@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { BarChart3, Eye, EyeOff } from 'lucide-react'
 import axios from 'axios'
 import api from '../../api/axios'
+import ForgetPassword from './ForgetPassword'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isForgetPasswordOpen, setIsForgetPasswordOpen] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -139,7 +141,15 @@ export default function LoginPage() {
 
             <div className="password-heading">
               <label htmlFor="password">Password</label>
-              <button type="button" className="forgot-link" onClick={() => setError('Password reset is available through the authentication API.')}>
+              <button
+                type="button"
+                className="forgot-link"
+                onClick={() => {
+                  setError('')
+                  setSuccess('')
+                  setIsForgetPasswordOpen(true)
+                }}
+              >
                 Forgot password?
               </button>
             </div>
@@ -186,6 +196,17 @@ export default function LoginPage() {
           <p className="login-footer">Authorized access only · Activity is securely logged.</p>
         </div>
       </section>
+
+      {isForgetPasswordOpen && (
+        <ForgetPassword
+          initialEmail={email}
+          onClose={() => setIsForgetPasswordOpen(false)}
+          onPasswordReset={() => {
+            setIsForgetPasswordOpen(false)
+            setSuccess('Password changed successfully. You can now sign in.')
+          }}
+        />
+      )}
     </main>
   )
 }
