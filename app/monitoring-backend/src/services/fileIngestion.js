@@ -2,6 +2,7 @@ const elasticClient = require("../config/elasticsearch");
 const { File } = require("../Models/FilesModels");
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { normalizeLogRecord } = require("../utils/logLevel");
 
 function parseCsvRows(content) {
     const rows = [];
@@ -60,7 +61,7 @@ function buildDocuments(file) {
         const records = Array.isArray(parsed) ? parsed : [parsed];
         return records.map(record => ({
             ...common,
-            ...record,
+            ...normalizeLogRecord(record),
             "@timestamp": record["@timestamp"] || record.timestamp || new Date().toISOString()
         }));
     }
@@ -80,7 +81,7 @@ function buildDocuments(file) {
 
             return {
                 ...common,
-                ...record,
+                ...normalizeLogRecord(record),
                 event_id: record.event_id || `${file._id.toString()}-${index + 1}`,
                 "@timestamp": record.timestamp || record["@timestamp"] || new Date().toISOString()
             };

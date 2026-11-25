@@ -24,12 +24,19 @@ describe("file ingestion documents", () => {
     });
 
     it("builds indexed documents from JSON arrays", () => {
-        const file = createFile("json", '[{"level":"ERROR","message":"Failed"}]');
+        const file = createFile("json", '[{"level":" error ","message":"Failed"}]');
         const documents = buildDocuments(file);
 
         expect(documents).toHaveLength(1);
         expect(documents[0].level).toBe("ERROR");
         expect(documents[0].source_format).toBe("json");
+    });
+
+    it("normalizes CSV warning aliases before indexing", () => {
+        const file = createFile("csv", "timestamp,level,message\n2026-11-18T10:00:00Z,warn,Slow request\n");
+        const documents = buildDocuments(file);
+
+        expect(documents[0].level).toBe("WARNING");
     });
 
     it("builds one indexed document per TXT line", () => {

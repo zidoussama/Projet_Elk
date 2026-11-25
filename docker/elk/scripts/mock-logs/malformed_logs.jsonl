@@ -1,0 +1,4 @@
+{"timestamp": "2026-11-10T10:00:00Z", "level": "ERROR", "message": "Missing closing brace"
+{"timestamp": "not-a-date", "level": "INFO", "amount": "not-a-number"}
+{"level": "ERROR", "message": "Invalid JSON",}
+THIS IS NOT JSON
