@@ -2,11 +2,16 @@ import api from './axios'
 import type {
   DashboardLogRecord,
   DashboardLogSearchResponse,
+  DashboardEvolutionInterval,
   DashboardStatsResponse,
 } from '../types/dashboard'
 
-export async function getDashboardStats(): Promise<DashboardStatsResponse> {
-  const { data } = await api.get<DashboardStatsResponse>('/dashboard/stats')
+export async function getDashboardStats(
+  interval: DashboardEvolutionInterval = 'hour',
+): Promise<DashboardStatsResponse> {
+  const { data } = await api.get<DashboardStatsResponse>('/dashboard/stats', {
+    params: { interval },
+  })
   return data
 }
 

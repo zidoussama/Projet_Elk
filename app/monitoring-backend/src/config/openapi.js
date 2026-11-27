@@ -52,6 +52,44 @@ const errorResponse = registry.register(
     })
 );
 
+const healthResponse = registry.register(
+    "HealthResponse",
+    z.object({
+        status: z.enum(["OK", "DEGRADED"]),
+        timestamp: z.string().datetime(),
+        services: z.object({
+            mongodb: z.enum(["UP", "DOWN"]),
+            redis: z.enum(["UP", "DOWN"]),
+            elasticsearch: z.enum(["UP", "DOWN"])
+        })
+    })
+);
+
+registry.registerPath({
+    method: "get",
+    path: "/health",
+    tags: ["Health"],
+    summary: "Check the health of MongoDB, Redis, and Elasticsearch",
+    responses: {
+        200: {
+            description: "All services are healthy",
+            content: {
+                "application/json": {
+                    schema: healthResponse
+                }
+            }
+        },
+        503: {
+            description: "One or more services are unavailable",
+            content: {
+                "application/json": {
+                    schema: healthResponse
+                }
+            }
+        }
+    }
+});
+
 registry.registerPath({
     method: "post",
     path: "/api/logs/preview",
@@ -237,6 +275,13 @@ registry.registerPath({
     path: "/api/dashboard/stats",
     tags: ["Dashboard"],
     summary: "Get dashboard log and file statistics",
+    request: {
+        query: z.object({
+            interval: z.enum(["hour", "month", "year"]).optional().openapi({
+                description: "Log evolution bucket size. Defaults to hour."
+            })
+        })
+    },
     responses: {
         200: {
             description: "Aggregated dashboard statistics",
@@ -262,6 +307,7 @@ registry.registerPath({
                             errorCriticalLogs: { type: "integer" },
                             importedFiles: { type: "integer" },
                             hourlyEvolution: {
+                                description: "Log counts grouped by the requested interval; the hour field is the UTC bucket start.",
                                 type: "array",
                                 items: {
                                     type: "object",
@@ -448,6 +494,10 @@ function createOpenApiDocument() {
             }
         ],
         tags: [
+            {
+                name: "Health",
+                description: "Backend and dependency health checks"
+            },
             {
                 name: "Logs",
                 description: "Log file upload, validation, storage and download"

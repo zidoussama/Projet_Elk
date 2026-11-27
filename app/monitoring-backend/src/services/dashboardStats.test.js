@@ -1,4 +1,5 @@
 const {
+    buildEvolutionAggregation,
     buildLevelCountQuery,
     formatUtcHour,
     normalizeLevelBuckets
@@ -12,6 +13,67 @@ describe("dashboard statistics helpers", () => {
 
     it("returns null for an invalid hourly bucket", () => {
         expect(formatUtcHour("invalid")).toBeNull();
+    });
+
+    it("uses a rolling 24-hour window for hourly evolution by default", () => {
+        expect(buildEvolutionAggregation(
+            "hour",
+            new Date("2026-11-27T12:00:00.000Z")
+        )).toEqual({
+            filter: {
+                range: {
+                    "@timestamp": {
+                        gte: "2026-11-26T12:00:00.000Z",
+                        lte: "2026-11-27T12:00:00.000Z"
+                    }
+                }
+            },
+            dateHistogram: {
+                field: "@timestamp",
+                format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+                min_doc_count: 0,
+                keyed: false,
+                fixed_interval: "1h",
+                extended_bounds: {
+                    min: "2026-11-26T12:00:00.000Z",
+                    max: "2026-11-27T12:00:00.000Z"
+                }
+            }
+        });
+    });
+
+    it("uses the current and previous 11 calendar months for monthly evolution", () => {
+        const { filter, dateHistogram } = buildEvolutionAggregation(
+            "month",
+            new Date("2026-11-27T12:00:00.000Z")
+        );
+
+        expect(filter.range["@timestamp"]).toEqual({
+            gte: "2025-12-01T00:00:00.000Z",
+            lte: "2026-11-27T12:00:00.000Z"
+        });
+        expect(dateHistogram.calendar_interval).toBe("month");
+        expect(dateHistogram.extended_bounds).toEqual({
+            min: "2025-12-01T00:00:00.000Z",
+            max: "2026-11-27T12:00:00.000Z"
+        });
+    });
+
+    it("uses all indexed history for yearly evolution", () => {
+        const { filter, dateHistogram } = buildEvolutionAggregation(
+            "year",
+            new Date("2026-11-27T12:00:00.000Z")
+        );
+
+        expect(filter).toEqual({ match_all: {} });
+        expect(dateHistogram.calendar_interval).toBe("year");
+        expect(dateHistogram).not.toHaveProperty("extended_bounds");
+    });
+
+    it("rejects unsupported evolution intervals", () => {
+        expect(() => buildEvolutionAggregation("day")).toThrow(
+            "interval must be one of: hour, month, year"
+        );
     });
 
     it("groups case variants and aliases into normalized level buckets", () => {

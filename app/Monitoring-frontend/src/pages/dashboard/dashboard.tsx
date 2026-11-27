@@ -1,7 +1,7 @@
+import { useState } from 'react'
 import {
   Activity,
   AlertTriangle,
-  ChevronDown,
   ChevronRight,
   ExternalLink,
   FileText,
@@ -26,6 +26,7 @@ import {
 import AppBar from './components/appbar'
 import Footer from './components/footer'
 import type {
+  DashboardEvolutionInterval,
   DashboardLevelSummary,
   DashboardMetric,
 } from '../../types/dashboard'
@@ -61,16 +62,18 @@ function getLevelClass(level: string): string {
   return knownLevels.has(normalized) ? `level-${normalized}` : 'level-other'
 }
 
-function getHourlyLabel(hour: string | null): string {
-  if (!hour) return '—'
-  const date = new Date(hour)
+function getEvolutionLabel(timestamp: string | null, interval: DashboardEvolutionInterval): string {
+  if (!timestamp) return '—'
+  const date = new Date(timestamp)
   if (Number.isNaN(date.getTime())) return '—'
 
-  return new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'UTC',
-  }).format(date)
+  const options: Intl.DateTimeFormatOptions = interval === 'hour'
+    ? { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }
+    : interval === 'month'
+      ? { month: 'short', year: '2-digit', timeZone: 'UTC' }
+      : { year: 'numeric', timeZone: 'UTC' }
+
+  return new Intl.DateTimeFormat(undefined, options).format(date)
 }
 
 function MetricIcon({ icon }: { icon: DashboardMetric['icon'] }) {
@@ -81,6 +84,7 @@ function MetricIcon({ icon }: { icon: DashboardMetric['icon'] }) {
 }
 
 function Dashboard() {
+  const [evolutionInterval, setEvolutionInterval] = useState<DashboardEvolutionInterval>('hour')
   const {
     stats,
     latestLogs,
@@ -90,7 +94,7 @@ function Dashboard() {
     logsLoading,
     logsError,
     refresh,
-  } = useDashboardData()
+  } = useDashboardData(evolutionInterval)
   const metricValue = (value: number | undefined) => {
     if (value !== undefined) return formatNumber(value)
     if (statsLoading) return 'Loading'
@@ -103,10 +107,15 @@ function Dashboard() {
     { label: 'Error logs', value: metricValue(stats?.errorLogs), detail: 'ERROR-level events', icon: 'warning', tone: 'red' },
     { label: 'Uploaded files', value: metricValue(stats?.importedFiles), detail: 'All uploaded files', icon: 'folder', tone: 'gold' },
   ]
-  const hourlyLogs = (stats?.hourlyEvolution ?? []).map(({ hour, count }) => ({
-    time: getHourlyLabel(hour),
+  const evolutionLogs = (stats?.hourlyEvolution ?? []).map(({ hour, count }) => ({
+    time: getEvolutionLabel(hour, evolutionInterval),
     count,
   }))
+  const evolutionDescription = {
+    hour: 'Log volume over the last 24 hours',
+    month: 'Log volume over the last 12 months',
+    year: 'Log volume across all available history',
+  }[evolutionInterval]
   const distribution = stats?.levelDistribution ?? []
   const totalLevelCount = distribution.reduce((total, entry) => total + entry.count, 0)
   const levelSummary: DashboardLevelSummary[] = distribution.map(({ level, count }) => ({
@@ -173,21 +182,33 @@ function Dashboard() {
           <article className="dashboard-card volume-card">
             <div className="card-heading">
               <div>
-                <h2>Logs per hour</h2>
-                <p>Log volume over the last 24 hours</p>
+                <h2>Logs per {evolutionInterval}</h2>
+                <p>{evolutionDescription}</p>
               </div>
-              <button type="button" className="chart-range">
-                Last 24 hours <ChevronDown size={12} />
-              </button>
+              <select
+                className="chart-range"
+                aria-label="Log chart interval"
+                value={evolutionInterval}
+                onChange={(event) => {
+                  const value = event.currentTarget.value
+                  if (value === 'hour' || value === 'month' || value === 'year') {
+                    setEvolutionInterval(value)
+                  }
+                }}
+              >
+                <option value="hour">Hourly</option>
+                <option value="month">Monthly</option>
+                <option value="year">Yearly</option>
+              </select>
             </div>
             <div className="volume-chart">
               {statsLoading && !stats ? (
-                <div className="dashboard-data-message">Loading hourly activity…</div>
-              ) : hourlyLogs.length === 0 ? (
-                <div className="dashboard-data-message">No hourly log data available.</div>
+                <div className="dashboard-data-message">Loading log activity…</div>
+              ) : evolutionLogs.length === 0 ? (
+                <div className="dashboard-data-message">No log data available for this interval.</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={hourlyLogs} margin={{ top: 10, right: 8, bottom: 0, left: -17 }}>
+                  <AreaChart data={evolutionLogs} margin={{ top: 10, right: 8, bottom: 0, left: -17 }}>
                     <defs>
                       <linearGradient id="logVolumeFill" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#0bb8bd" stopOpacity={0.22} />

@@ -6,13 +6,13 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 
 const { connectMongoDB } = require("./config/mongodb");
-const { connectRedis, redisClient } = require("./config/redis");
-const elasticClient = require("./config/elasticsearch");
+const { connectRedis } = require("./config/redis");
 const fileRoutes = require("./routes/fileRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const searchRoutes = require("./routes/searchRoutes");
 const statusRoutes = require("./routes/statusRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const healthRoutes = require("./routes/health");
 const { mountSwagger } = require("./config/swagger");
 
 const app = express();
@@ -90,77 +90,7 @@ async function startServer() {
         app.use("/api/logs", searchRoutes);
         app.use("/api/logs", statusRoutes);
         app.use("/api/dashboard", dashboardRoutes);
-
-        // ==========================
-        // Health Check
-        // ==========================
-
-        async function checkService(checkFunction) {
-            let timeout;
-
-            try {
-                await Promise.race([
-                    checkFunction(),
-                    new Promise((_, reject) => {
-                        timeout = setTimeout(
-                            () => reject(new Error("Timeout")),
-                            3000
-                        );
-                    })
-                ]);
-
-                return "UP";
-
-            } catch {
-                return "DOWN";
-
-            } finally {
-                clearTimeout(timeout);
-            }
-        }
-
-        app.get("/health", async (req, res) => {
-
-            const [mongodb, redis, elasticsearch] =
-                await Promise.all([
-
-                    checkService(async () => {
-                        if (mongoose.connection.readyState !== 1) {
-                            throw new Error("MongoDB disconnected");
-                        }
-
-                        await mongoose.connection.db.admin().ping();
-                    }),
-
-                    checkService(async () => {
-                        if (!redisClient.isReady) {
-                            throw new Error("Redis disconnected");
-                        }
-
-                        await redisClient.ping();
-                    }),
-
-                    checkService(async () => {
-                        await elasticClient.info();
-                    })
-
-                ]);
-
-            const services = {
-                mongodb,
-                redis,
-                elasticsearch
-            };
-
-            const healthy = Object.values(services)
-                .every(status => status === "UP");
-
-            res.status(healthy ? 200 : 503).json({
-                status: healthy ? "OK" : "DEGRADED",
-                timestamp: new Date().toISOString(),
-                services
-            });
-        });
+        app.use("/health", healthRoutes);
 
         // ==========================
         // Start Express

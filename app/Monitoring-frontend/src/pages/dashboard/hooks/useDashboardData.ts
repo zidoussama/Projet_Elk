@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { getDashboardStats, getLatestDashboardLogs } from '../../../api/api'
+import type { DashboardEvolutionInterval } from '../../../types/dashboard'
 
 const REFRESH_INTERVAL = 30_000
 
-export function useDashboardData() {
+export function useDashboardData(interval: DashboardEvolutionInterval) {
   const statsQuery = useQuery({
-    queryKey: ['dashboard', 'stats'],
-    queryFn: getDashboardStats,
+    queryKey: ['dashboard', 'stats', interval],
+    queryFn: () => getDashboardStats(interval),
     refetchInterval: REFRESH_INTERVAL,
   })
 

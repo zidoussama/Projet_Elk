@@ -13,6 +13,10 @@
   ],
   "tags": [
     {
+      "name": "Health",
+      "description": "Backend and dependency health checks"
+    },
+    {
       "name": "Logs",
       "description": "Log file upload, validation, storage and download"
     }
@@ -135,11 +139,93 @@
         "required": [
           "error"
         ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "OK",
+              "DEGRADED"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "services": {
+            "type": "object",
+            "properties": {
+              "mongodb": {
+                "type": "string",
+                "enum": [
+                  "UP",
+                  "DOWN"
+                ]
+              },
+              "redis": {
+                "type": "string",
+                "enum": [
+                  "UP",
+                  "DOWN"
+                ]
+              },
+              "elasticsearch": {
+                "type": "string",
+                "enum": [
+                  "UP",
+                  "DOWN"
+                ]
+              }
+            },
+            "required": [
+              "mongodb",
+              "redis",
+              "elasticsearch"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "timestamp",
+          "services"
+        ]
       }
     },
     "parameters": {}
   },
   "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Check the health of MongoDB, Redis, and Elasticsearch",
+        "responses": {
+          "200": {
+            "description": "All services are healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "One or more services are unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/logs/preview": {
       "post": {
         "tags": [
@@ -506,6 +592,23 @@
           "Dashboard"
         ],
         "summary": "Get dashboard log and file statistics",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "hour",
+                "month",
+                "year"
+              ],
+              "description": "Log evolution bucket size. Defaults to hour."
+            },
+            "required": false,
+            "description": "Log evolution bucket size. Defaults to hour.",
+            "name": "interval",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Aggregated dashboard statistics",
@@ -543,6 +646,7 @@
                       "type": "integer"
                     },
                     "hourlyEvolution": {
+                      "description": "Log counts grouped by the requested interval; the hour field is the UTC bucket start.",
                       "type": "array",
                       "items": {
                         "type": "object",

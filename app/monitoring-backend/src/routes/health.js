@@ -7,11 +7,13 @@ const elasticClient = require('../config/elasticsearch');
 
 // Vérifier un service avec un timeout
 async function checkService(checkFunction) {
+    let timeout;
+
     try {
         await Promise.race([
             checkFunction(),
             new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout')), 3000)
+                timeout = setTimeout(() => reject(new Error('Timeout')), 3000)
             )
         ]);
 
@@ -19,6 +21,8 @@ async function checkService(checkFunction) {
 
     } catch {
         return 'DOWN';
+    } finally {
+        clearTimeout(timeout);
     }
 }
 

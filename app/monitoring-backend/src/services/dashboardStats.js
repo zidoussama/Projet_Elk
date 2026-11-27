@@ -13,6 +13,11 @@ function formatUtcHour(timestamp) {
     return date.toISOString().slice(0, 13) + ":00:00.000Z";
 }
 
+function formatUtcBucket(timestamp) {
+    const date = new Date(timestamp);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function normalizeErrorCount(response) {
     return typeof response?.count === "number" ? response.count : 0;
 }
@@ -45,7 +50,54 @@ function normalizeLevelBuckets(buckets = []) {
         .sort((left, right) => right.count - left.count);
 }
 
-async function getDashboardStats(now = new Date()) {
+function buildEvolutionAggregation(interval = "hour", now = new Date()) {
+    const nowIso = now.toISOString();
+    const dateHistogram = {
+        field: "@timestamp",
+        format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+        min_doc_count: 0,
+        keyed: false
+    };
+    let filter = { match_all: {} };
+
+    if (interval === "hour") {
+        const from = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+        filter = {
+            range: {
+                "@timestamp": {
+                    gte: from,
+                    lte: nowIso
+                }
+            }
+        };
+        dateHistogram.fixed_interval = "1h";
+        dateHistogram.extended_bounds = { min: from, max: nowIso };
+    } else if (interval === "month") {
+        const start = new Date(Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth() - 11,
+            1
+        )).toISOString();
+        filter = {
+            range: {
+                "@timestamp": {
+                    gte: start,
+                    lte: nowIso
+                }
+            }
+        };
+        dateHistogram.calendar_interval = "month";
+        dateHistogram.extended_bounds = { min: start, max: nowIso };
+    } else if (interval === "year") {
+        dateHistogram.calendar_interval = "year";
+    } else {
+        throw new Error("interval must be one of: hour, month, year");
+    }
+
+    return { filter, dateHistogram };
+}
+
+async function getDashboardStats({ interval = "hour" } = {}, now = new Date()) {
     const startOfDay = new Date(now);
     startOfDay.setUTCHours(0, 0, 0, 0);
 
@@ -58,6 +110,7 @@ async function getDashboardStats(now = new Date()) {
         twentyFourHoursAgo.getUTCSeconds(),
         0
     );
+    const evolution = buildEvolutionAggregation(interval, now);
 
     const [totalResponse, todayResponse, errorResponse, criticalResponse, aggregateResponse, importedFiles] =
         await Promise.all([
@@ -93,13 +146,17 @@ async function getDashboardStats(now = new Date()) {
                     }
                 },
                 aggs: {
-                    hourly: {
-                        date_histogram: {
-                            field: "@timestamp",
-                            fixed_interval: "1h",
-                            format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
-                            min_doc_count: 0,
-                            keyed: false
+                    evolution: {
+                        global: {},
+                        aggs: {
+                            filtered: {
+                                filter: evolution.filter,
+                                aggs: {
+                                    buckets: {
+                                        date_histogram: evolution.dateHistogram
+                                    }
+                                }
+                            }
                         }
                     },
                     levels: {
@@ -114,7 +171,8 @@ async function getDashboardStats(now = new Date()) {
             File.countDocuments({})
         ]);
 
-    const hourlyBuckets = aggregateResponse.aggregations?.hourly?.buckets || [];
+    const evolutionBuckets =
+        aggregateResponse.aggregations?.evolution?.filtered?.buckets?.buckets || [];
     const levelBuckets = aggregateResponse.aggregations?.levels?.buckets || [];
 
     return {
@@ -126,8 +184,8 @@ async function getDashboardStats(now = new Date()) {
             normalizeErrorCount(errorResponse) +
             normalizeErrorCount(criticalResponse),
         importedFiles,
-        hourlyEvolution: hourlyBuckets.map(bucket => ({
-            hour: formatUtcHour(bucket.key_as_string || bucket.key),
+        hourlyEvolution: evolutionBuckets.map(bucket => ({
+            hour: formatUtcBucket(bucket.key_as_string || bucket.key),
             count: bucket.doc_count
         })),
         levelDistribution: normalizeLevelBuckets(levelBuckets)
@@ -136,6 +194,8 @@ async function getDashboardStats(now = new Date()) {
 
 module.exports = {
     buildLevelCountQuery,
+    buildEvolutionAggregation,
+    formatUtcBucket,
     formatUtcHour,
     getDashboardStats,
     normalizeLevelBuckets

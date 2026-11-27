@@ -25,6 +25,8 @@ export interface DashboardStatsResponse {
   levelDistribution: Array<{ level: string; count: number }>
 }
 
+export type DashboardEvolutionInterval = 'hour' | 'month' | 'year'
+
 export interface DashboardLevelSummary {
   level: string
   percent: number
